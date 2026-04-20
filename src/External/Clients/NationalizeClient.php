@@ -11,11 +11,13 @@ use Exception;
 final class NationalizeClient implements ExternalApiClientInterface
 {
     private HttpClient $httpClient;
-    private const BASE_URL = 'https://api.nationalize.io';
+    private CountriesClient $countriesClient;
+    private const string BASE_URL = 'https://api.nationalize.io';
 
     public function __construct()
     {
         $this->httpClient = new HttpClient();
+        $this->countriesClient = new CountriesClient();
     }
 
     public function getName(): string
@@ -41,9 +43,11 @@ final class NationalizeClient implements ExternalApiClientInterface
         usort($countries, fn($a, $b) => $b['probability'] <=> $a['probability']);
 
         $topCountry = $countries[0];
+        $countryId = $topCountry['country_id'];
 
         return [
-            'country_id' => $topCountry['country_id'],
+            'country_id' => $countryId,
+            'country_name' => $this->countriesClient->getCountryNameByCode($countryId),
             'country_probability' => (float)$topCountry['probability'],
         ];
     }

@@ -14,11 +14,24 @@ interface ProfileRepositoryInterface
 
     public function findByName(string $name): ?Profile;
 
-    public function findAll(array $filters = []): array;
+    public function findByCountryName(string $countryName): ?string;
 
-    public function update(Profile $profile): Profile;
+    /**
+     * Find all profiles with filtering, sorting, and pagination
+     */
+    public function findAll(
+        array $filters = [],
+        string $sortBy = 'created_at',
+        string $order = 'desc',
+        int $limit = 10,
+        int $offset = 0
+    ): array;
+
+    public function count(array $filters = []): int;
 
     public function delete(string $id): bool;
 
-    public function count(array $filters = []): int;
+    public function existsByName(string $name): bool;
+
+    public function batchCreate(array $profiles): void;
 }

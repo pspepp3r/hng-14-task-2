@@ -18,10 +18,3 @@ if (file_exists($envFile)) {
         putenv(trim($key) . '=' . trim($value));
     }
 }
-
-// External API constants
-define('EXTERNAL_APIS', [
-    'genderize' => 'https://api.genderize.io',
-    'agify' => 'https://api.agify.io',
-    'nationalize' => 'https://api.nationalize.io',
-]);

@@ -27,13 +27,16 @@ class Migration
             age INT COMMENT 'Age estimation',
             age_group VARCHAR(20) COMMENT 'Age group classification',
             country_id CHAR(2) COMMENT 'Country ISO code',
-            country_name VARCHAR(30) COMMENT 'The full name of the country'
+            country_name VARCHAR(100) COMMENT 'The full name of the country',
             country_probability DECIMAL(3, 2) COMMENT 'Country probability (0-1)',
             created_at VARCHAR(30) COMMENT 'Creation timestamp in ISO 8601 UTC',
             INDEX idx_name (name),
             INDEX idx_gender (gender),
             INDEX idx_age_group (age_group),
-            INDEX idx_country_id (country_id)
+            INDEX idx_country_id (country_id),
+            INDEX idx_age (age),
+            INDEX idx_gender_prob (gender_probability),
+            INDEX idx_country_prob (country_probability)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         SQL;
 

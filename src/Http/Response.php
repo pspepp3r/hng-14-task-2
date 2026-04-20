@@ -13,28 +13,40 @@ final class Response implements JsonSerializable
     private array $data;
     private ?string $message;
     private ?int $count;
+    private ?int $page;
+    private ?int $limit;
+    private ?int $total;
 
     private function __construct(
         int $statusCode,
         string $status,
         array $data = [],
         ?string $message = null,
-        ?int $count = null
+        ?int $count = null,
+        ?int $page = null,
+        ?int $limit = null,
+        ?int $total = null
     ) {
         $this->statusCode = $statusCode;
         $this->status = $status;
         $this->data = $data;
         $this->message = $message;
         $this->count = $count;
+        $this->page = $page;
+        $this->limit = $limit;
+        $this->total = $total;
     }
 
     public static function success(
         array $data,
         int $statusCode = 200,
         ?string $message = null,
-        ?int $count = null
+        ?int $count = null,
+        ?int $page = null,
+        ?int $limit = null,
+        ?int $total = null
     ): self {
-        return new self($statusCode, 'success', $data, $message, $count);
+        return new self($statusCode, 'success', $data, $message, $count, $page, $limit, $total);
     }
 
     public static function error(
@@ -61,6 +73,18 @@ final class Response implements JsonSerializable
 
         if ($this->count !== null) {
             $response['count'] = $this->count;
+        }
+
+        if ($this->page !== null) {
+            $response['page'] = $this->page;
+        }
+
+        if ($this->limit !== null) {
+            $response['limit'] = $this->limit;
+        }
+
+        if ($this->total !== null) {
+            $response['total'] = $this->total;
         }
 
         $response['data'] = $this->data;

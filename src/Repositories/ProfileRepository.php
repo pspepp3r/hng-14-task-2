@@ -7,7 +7,6 @@ namespace App\Repositories;
 use App\Database\Connection;
 use App\Models\Profile;
 use PDO;
-use PDOStatement;
 
 final class ProfileRepository implements ProfileRepositoryInterface
 {
@@ -22,14 +21,14 @@ final class ProfileRepository implements ProfileRepositoryInterface
     {
         $query = <<<SQL
         INSERT INTO profiles (
-            id, name, gender, gender_probability, sample_size,
-            age, age_group, country_id, country_probability,
-            created_at, updated_at
+            id, name, gender, gender_probability,
+            age, age_group, country_id, country_name, country_probability,
+            created_at
         ) VALUES (
             UNHEX(REPLACE(?, '-', '')),
-            ?, ?, ?, ?,
-            ?, ?, ?, ?,
-            ?, ?
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?
         )
         SQL;
 
@@ -39,13 +38,12 @@ final class ProfileRepository implements ProfileRepositoryInterface
             $profile->getName(),
             $profile->getGender(),
             $profile->getGenderProbability(),
-            $profile->getSampleSize(),
             $profile->getAge(),
             $profile->getAgeGroup(),
             $profile->getCountryId(),
+            $profile->getCountryName(),
             $profile->getCountryProbability(),
             $profile->getCreatedAt(),
-            $profile->getUpdatedAt(),
         ]);
 
         return $profile;
@@ -71,27 +69,40 @@ final class ProfileRepository implements ProfileRepositoryInterface
         return $result ? $this->mapToProfile($result) : null;
     }
 
-    public function findAll(array $filters = []): array
+    public function findByCountryName(string $countryName): ?string
     {
+        $query = 'SELECT country_id FROM profiles WHERE LOWER(country_name) = LOWER(?) LIMIT 1';
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$countryName]);
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['country_id'] : null;
+    }
+
+    /**
+     * Find all profiles with filtering, sorting, and pagination
+     * 
+     * @param array $filters Filter criteria
+     * @param string $sortBy Field to sort by (age, created_at, gender_probability)
+     * @param string $order Sort order (asc, desc)
+     * @param int $limit Limit results
+     * @param int $offset Offset results
+     */
+    public function findAll(
+        array $filters = [],
+        string $sortBy = 'created_at',
+        string $order = 'desc',
+        int $limit = 10,
+        int $offset = 0
+    ): array {
         $query = 'SELECT * FROM profiles WHERE 1=1';
         $params = [];
 
-        if (!empty($filters['gender'])) {
-            $query .= ' AND LOWER(gender) = LOWER(?)';
-            $params[] = $filters['gender'];
-        }
-
-        if (!empty($filters['country_id'])) {
-            $query .= ' AND LOWER(country_id) = LOWER(?)';
-            $params[] = $filters['country_id'];
-        }
-
-        if (!empty($filters['age_group'])) {
-            $query .= ' AND LOWER(age_group) = LOWER(?)';
-            $params[] = $filters['age_group'];
-        }
-
-        $query .= ' ORDER BY created_at DESC';
+        $query = $this->applyFilters($query, $filters, $params);
+        $query = $this->applySorting($query, $sortBy, $order);
+        $query .= ' LIMIT ? OFFSET ?';
+        $params[] = $limit;
+        $params[] = $offset;
 
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
@@ -100,62 +111,21 @@ final class ProfileRepository implements ProfileRepositoryInterface
         return array_map([$this, 'mapToProfile'], $results);
     }
 
+    /**
+     * Count profiles with filtering
+     */
     public function count(array $filters = []): int
     {
         $query = 'SELECT COUNT(*) as total FROM profiles WHERE 1=1';
         $params = [];
 
-        if (!empty($filters['gender'])) {
-            $query .= ' AND LOWER(gender) = LOWER(?)';
-            $params[] = $filters['gender'];
-        }
-
-        if (!empty($filters['country_id'])) {
-            $query .= ' AND LOWER(country_id) = LOWER(?)';
-            $params[] = $filters['country_id'];
-        }
-
-        if (!empty($filters['age_group'])) {
-            $query .= ' AND LOWER(age_group) = LOWER(?)';
-            $params[] = $filters['age_group'];
-        }
+        $query = $this->applyFilters($query, $filters, $params);
 
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return (int)($result['total'] ?? 0);
-    }
-
-    public function update(Profile $profile): Profile
-    {
-        $query = <<<SQL
-        UPDATE profiles SET
-            gender = ?,
-            gender_probability = ?,
-            sample_size = ?,
-            age = ?,
-            age_group = ?,
-            country_id = ?,
-            country_probability = ?,
-            updated_at = ?
-        WHERE id = UNHEX(REPLACE(?, '-', ''))
-        SQL;
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([
-            $profile->getGender(),
-            $profile->getGenderProbability(),
-            $profile->getSampleSize(),
-            $profile->getAge(),
-            $profile->getAgeGroup(),
-            $profile->getCountryId(),
-            $profile->getCountryProbability(),
-            $profile->getUpdatedAt(),
-            $profile->getId(),
-        ]);
-
-        return $profile;
     }
 
     public function delete(string $id): bool
@@ -167,23 +137,133 @@ final class ProfileRepository implements ProfileRepositoryInterface
         return $stmt->rowCount() > 0;
     }
 
+    /**
+     * Check if profile with name exists
+     */
+    public function existsByName(string $name): bool
+    {
+        $query = 'SELECT 1 FROM profiles WHERE LOWER(name) = LOWER(?) LIMIT 1';
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$name]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Batch insert profiles (for seeding)
+     */
+    public function batchCreate(array $profiles): void
+    {
+        $query = <<<SQL
+        INSERT INTO profiles (
+            id, name, gender, gender_probability,
+            age, age_group, country_id, country_name, country_probability,
+            created_at
+        ) VALUES (
+            UNHEX(REPLACE(?, '-', '')),
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?
+        )
+        SQL;
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($profiles as $profile) {
+            $stmt->execute([
+                $profile->getId(),
+                $profile->getName(),
+                $profile->getGender(),
+                $profile->getGenderProbability(),
+                $profile->getAge(),
+                $profile->getAgeGroup(),
+                $profile->getCountryId(),
+                $profile->getCountryName(),
+                $profile->getCountryProbability(),
+                $profile->getCreatedAt(),
+            ]);
+        }
+    }
+
+    /**
+     * Apply filters to query
+     */
+    private function applyFilters(string $query, array $filters, array &$params): string
+    {
+        if (!empty($filters['gender'])) {
+            $query .= ' AND LOWER(gender) = LOWER(?)';
+            $params[] = $filters['gender'];
+        }
+
+        if (!empty($filters['country_id'])) {
+            $query .= ' AND LOWER(country_id) = LOWER(?)';
+            $params[] = $filters['country_id'];
+        }
+
+        if (!empty($filters['age_group'])) {
+            $query .= ' AND LOWER(age_group) = LOWER(?)';
+            $params[] = $filters['age_group'];
+        }
+
+        if (isset($filters['min_age']) && $filters['min_age'] !== null) {
+            $query .= ' AND age >= ?';
+            $params[] = (int)$filters['min_age'];
+        }
+
+        if (isset($filters['max_age']) && $filters['max_age'] !== null) {
+            $query .= ' AND age <= ?';
+            $params[] = (int)$filters['max_age'];
+        }
+
+        if (isset($filters['min_gender_probability']) && $filters['min_gender_probability'] !== null) {
+            $query .= ' AND gender_probability >= ?';
+            $params[] = (float)$filters['min_gender_probability'];
+        }
+
+        if (isset($filters['min_country_probability']) && $filters['min_country_probability'] !== null) {
+            $query .= ' AND country_probability >= ?';
+            $params[] = (float)$filters['min_country_probability'];
+        }
+
+        return $query;
+    }
+
+    /**
+     * Apply sorting to query
+     */
+    private function applySorting(string $query, string $sortBy, string $order): string
+    {
+        $validSortFields = ['age', 'created_at', 'gender_probability'];
+        $validOrders = ['asc', 'desc'];
+
+        $sortBy = \in_array($sortBy, $validSortFields) ? $sortBy : 'created_at';
+        $order = \in_array(strtolower($order), $validOrders) ? strtoupper($order) : 'DESC';
+
+        return $query . " ORDER BY $sortBy $order";
+    }
+
+    /**
+     * Map database row to Profile model
+     */
     private function mapToProfile(array $data): Profile
     {
         return new Profile(
             name: $data['name'],
             gender: $data['gender'],
             genderProbability: $data['gender_probability'] !== null ? (float)$data['gender_probability'] : null,
-            sampleSize: $data['sample_size'] !== null ? (int)$data['sample_size'] : null,
             age: $data['age'] !== null ? (int)$data['age'] : null,
             ageGroup: $data['age_group'],
             countryId: $data['country_id'],
+            countryName: $data['country_name'],
             countryProbability: $data['country_probability'] !== null ? (float)$data['country_probability'] : null,
             id: $this->binaryToUuid($data['id']),
             createdAt: $data['created_at'],
-            updatedAt: $data['updated_at'],
         );
     }
 
+    /**
+     * Convert binary UUID to string format
+     */
     private function binaryToUuid(string $binary): string
     {
         $hex = bin2hex($binary);

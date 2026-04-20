@@ -76,7 +76,7 @@ final class ProfileController
         try {
             $filters = [];
 
-            // Extract query parameters
+            // Basic filters
             if (isset($_GET['gender'])) {
                 $filters['gender'] = (string)$_GET['gender'];
             }
@@ -89,12 +89,72 @@ final class ProfileController
                 $filters['age_group'] = (string)$_GET['age_group'];
             }
 
-            $profiles = $this->profileService->getAllProfiles($filters);
-            $count = $this->profileService->getProfileCount($filters);
+            // Numeric filters
+            if (isset($_GET['min_age'])) {
+                $minAge = filter_var($_GET['min_age'], FILTER_VALIDATE_INT);
+                if ($minAge !== false) {
+                    $filters['min_age'] = $minAge;
+                } else {
+                    Response::error('Invalid query parameters', 400)->send();
+                    return;
+                }
+            }
 
-            $data = array_map(fn($p) => $p->toArrayMinimal(), $profiles);
+            if (isset($_GET['max_age'])) {
+                $maxAge = filter_var($_GET['max_age'], FILTER_VALIDATE_INT);
+                if ($maxAge !== false) {
+                    $filters['max_age'] = $maxAge;
+                } else {
+                    Response::error('Invalid query parameters', 400)->send();
+                    return;
+                }
+            }
 
-            Response::success($data, 200, null, $count)->send();
+            if (isset($_GET['min_gender_probability'])) {
+                $minGenderProb = filter_var($_GET['min_gender_probability'], FILTER_VALIDATE_FLOAT);
+                if ($minGenderProb !== false) {
+                    $filters['min_gender_probability'] = $minGenderProb;
+                } else {
+                    Response::error('Invalid query parameters', 400)->send();
+                    return;
+                }
+            }
+
+            if (isset($_GET['min_country_probability'])) {
+                $minCountryProb = filter_var($_GET['min_country_probability'], FILTER_VALIDATE_FLOAT);
+                if ($minCountryProb !== false) {
+                    $filters['min_country_probability'] = $minCountryProb;
+                } else {
+                    Response::error('Invalid query parameters', 400)->send();
+                    return;
+                }
+            }
+
+            // Pagination
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+
+            // Validate pagination
+            if ($page < 1 || $limit < 1 || $limit > 50) {
+                Response::error('Invalid query parameters', 400)->send();
+                return;
+            }
+
+            // Sorting
+            $sortBy = $_GET['sort_by'] ?? 'created_at';
+            $order = $_GET['order'] ?? 'desc';
+
+            $result = $this->profileService->getProfilesWithPagination(
+                $filters,
+                $sortBy,
+                $order,
+                $page,
+                $limit
+            );
+
+            $data = array_map(fn($p) => $p->toArray(), $result['profiles']);
+
+            Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
         } catch (Exception $e) {
             $this->handleException($e);
         }
@@ -114,6 +174,42 @@ final class ProfileController
             exit;
         } catch (Exception $e) {
             $this->handleException($e);
+        }
+    }
+
+    public function search(): void
+    {
+        try {
+            // Get query parameter
+            $query = $_GET['q'] ?? null;
+
+            if (empty($query)) {
+                Response::error('Missing or empty parameter', 400)->send();
+                return;
+            }
+
+            // Pagination
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+
+            // Validate pagination
+            if ($page < 1 || $limit < 1 || $limit > 50) {
+                Response::error('Invalid query parameters', 400)->send();
+                return;
+            }
+
+            // Search profiles
+            $result = $this->profileService->searchProfiles($query, $page, $limit);
+
+            $data = array_map(fn($p) => $p->toArray(), $result['profiles']);
+
+            Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
+        } catch (Exception $e) {
+            if (str_contains($e->getMessage(), 'Unable to interpret query')) {
+                Response::error('Unable to interpret query', 400)->send();
+            } else {
+                $this->handleException($e);
+            }
         }
     }
 

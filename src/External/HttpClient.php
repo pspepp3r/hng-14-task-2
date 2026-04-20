@@ -13,22 +13,22 @@ final class HttpClient
     public function get(string $url): array
     {
         try {
-            $context = stream_context_create([
+            $context = \stream_context_create([
                 'http' => [
                     'timeout' => $this->timeout,
                     'user_agent' => 'PHP-Client/1.0',
                 ]
             ]);
 
-            $response = @file_get_contents($url, false, $context);
+            $response = @\file_get_contents($url, false, $context);
 
             if ($response === false) {
                 throw new Exception('Failed to fetch URL');
             }
 
-            $data = json_decode($response, true);
+            $data = \json_decode($response, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if (\json_last_error() !== JSON_ERROR_NONE) {
                 throw new Exception('Invalid JSON response');
             }
 

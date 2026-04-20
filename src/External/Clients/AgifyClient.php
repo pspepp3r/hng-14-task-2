@@ -11,7 +11,7 @@ use Exception;
 final class AgifyClient implements ExternalApiClientInterface
 {
     private HttpClient $httpClient;
-    private const BASE_URL = 'https://api.agify.io';
+    private const string BASE_URL = 'https://api.agify.io';
 
     public function __construct()
     {
@@ -25,7 +25,7 @@ final class AgifyClient implements ExternalApiClientInterface
 
     public function fetch(string $name): array
     {
-        $url = self::BASE_URL . '?name=' . urlencode($name);
+        $url = self::BASE_URL . '?name=' . \urlencode($name);
         return $this->httpClient->get($url);
     }
 

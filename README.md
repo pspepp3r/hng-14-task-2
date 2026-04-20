@@ -19,9 +19,9 @@ A RESTful API for querying demographic profiles with advanced filtering, sorting
 git clone https://github.com/pspepp3r/hng-14-task-2.git
 cd hng-14-task-2
 composer install
-php bin/migrate.php
-php bin/migrate.php seed data/profiles.json
-php -S localhost:8000
+composer migrate
+composer migrate seed data/profiles.json
+composer start
 ```
 
 ### API Base URL

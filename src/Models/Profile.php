@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Ramsey\Uuid\Uuid;
 use InvalidArgumentException;
+use Ramsey\Uuid\Uuid;
 
 final class Profile
 {
@@ -47,7 +47,7 @@ final class Profile
 
     private function validateName(string $name): void
     {
-        if (empty(trim($name))) {
+        if (empty(\trim($name))) {
             throw new InvalidArgumentException('Name cannot be empty');
         }
     }

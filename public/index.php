@@ -5,8 +5,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/Bootstrap.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Http\Router;
 use App\Http\Middleware\CorsMiddleware;
+use App\Http\Router;
 use App\Services\LoggerService;
 
 // Set error reporting

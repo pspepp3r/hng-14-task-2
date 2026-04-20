@@ -11,7 +11,7 @@ use Exception;
 final class GenderizeClient implements ExternalApiClientInterface
 {
     private HttpClient $httpClient;
-    private const BASE_URL = 'https://api.genderize.io';
+    private const string BASE_URL = 'https://api.genderize.io';
 
     public function __construct()
     {

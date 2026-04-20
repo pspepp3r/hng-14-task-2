@@ -108,7 +108,7 @@ final class ProfileRepository implements ProfileRepositoryInterface
         $stmt->execute($params);
 
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return array_map([$this, 'mapToProfile'], $results);
+        return \array_map([$this, 'mapToProfile'], $results);
     }
 
     /**
@@ -237,9 +237,9 @@ final class ProfileRepository implements ProfileRepositoryInterface
         $validOrders = ['asc', 'desc'];
 
         $sortBy = \in_array($sortBy, $validSortFields) ? $sortBy : 'created_at';
-        $order = \in_array(strtolower($order), $validOrders) ? strtoupper($order) : 'DESC';
+        $order = \in_array(\strtolower($order), $validOrders) ? \strtoupper($order) : 'DESC';
 
-        return $query . " ORDER BY $sortBy $order";
+        return "$query ORDER BY $sortBy $order";
     }
 
     /**
@@ -266,11 +266,11 @@ final class ProfileRepository implements ProfileRepositoryInterface
      */
     private function binaryToUuid(string $binary): string
     {
-        $hex = bin2hex($binary);
-        return substr($hex, 0, 8) . '-' .
-            substr($hex, 8, 4) . '-' .
-            substr($hex, 12, 4) . '-' .
-            substr($hex, 16, 4) . '-' .
-            substr($hex, 20, 12);
+        $hex = \bin2hex($binary);
+        return \substr($hex, 0, 8) . '-' .
+            \substr($hex, 8, 4) . '-' .
+            \substr($hex, 12, 4) . '-' .
+            \substr($hex, 16, 4) . '-' .
+            \substr($hex, 20, 12);
     }
 }

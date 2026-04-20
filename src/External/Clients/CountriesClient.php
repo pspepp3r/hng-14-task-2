@@ -43,7 +43,7 @@ final class CountriesClient implements ExternalApiClientInterface
      */
     public function validate(array $response): array
     {
-        if (!is_array($response) || empty($response)) {
+        if (!\is_array($response) || empty($response)) {
             throw new Exception('Countries API returned empty data');
         }
 
@@ -88,13 +88,13 @@ final class CountriesClient implements ExternalApiClientInterface
                 if (isset($country['demonyms']['eng'])) {
                     $engDemonym = $country['demonyms']['eng'];
 
-                    if (is_array($engDemonym)) {
+                    if (\is_array($engDemonym)) {
                         foreach ($engDemonym as $demonym) {
                             if (strtolower($demonym) === $searchTerm) {
                                 return $country['cca2'];
                             }
                         }
-                    } elseif (is_string($engDemonym) && strtolower($engDemonym) === $searchTerm) {
+                    } elseif (\is_string($engDemonym) && strtolower($engDemonym) === $searchTerm) {
                         return $country['cca2'];
                     }
                 }

@@ -6,6 +6,7 @@ namespace App\Database;
 
 use PDO;
 use Exception;
+use function getenv;
 
 class Connection
 {

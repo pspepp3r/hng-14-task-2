@@ -102,8 +102,8 @@ final class Response implements JsonSerializable
 
     public function send(): void
     {
-        http_response_code($this->statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($this, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        \http_response_code($this->statusCode);
+        \header('Content-Type: application/json');
+        echo \json_encode($this, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }

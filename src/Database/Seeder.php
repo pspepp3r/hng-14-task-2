@@ -45,7 +45,7 @@ class Seeder
             throw new RuntimeException("Invalid JSON in seed file: $filePath");
         }
 
-        if (!isset($data[0]) && !is_array($data)) {
+        if (!isset($data[0]) && !\is_array($data)) {
             throw new RuntimeException("Seed file must contain an array of profiles");
         }
 
@@ -83,9 +83,9 @@ class Seeder
             }
 
             // Batch insert every 100 records
-            if (count($profiles) >= 100) {
+            if (\count($profiles) >= 100) {
                 $this->repository->batchCreate($profiles);
-                echo "Inserted " . count($profiles) . " profiles\n";
+                echo "Inserted " . \count($profiles) . " profiles\n";
                 $profiles = [];
             }
         }
@@ -93,11 +93,11 @@ class Seeder
         // Insert remaining profiles
         if (!empty($profiles)) {
             $this->repository->batchCreate($profiles);
-            echo "Inserted " . count($profiles) . " profiles\n";
+            echo "Inserted " . \count($profiles) . " profiles\n";
         }
 
         echo "✓ Seeding complete!\n";
-        echo "  - Profiles created: " . (count($data) - $duplicateCount) . "\n";
+        echo "  - Profiles created: " . \count($data) - $duplicateCount . "\n";
         echo "  - Duplicates skipped: $duplicateCount\n";
     }
 

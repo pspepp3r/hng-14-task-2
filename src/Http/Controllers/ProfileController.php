@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Response;
-use App\Services\ProfileService;
 use App\Repositories\ProfileRepository;
+use App\Services\ProfileService;
 use Exception;
 
 final class ProfileController
@@ -91,7 +91,7 @@ final class ProfileController
 
             // Numeric filters
             if (isset($_GET['min_age'])) {
-                $minAge = filter_var($_GET['min_age'], FILTER_VALIDATE_INT);
+                $minAge = \filter_var($_GET['min_age'], FILTER_VALIDATE_INT);
                 if ($minAge !== false) {
                     $filters['min_age'] = $minAge;
                 } else {
@@ -101,7 +101,7 @@ final class ProfileController
             }
 
             if (isset($_GET['max_age'])) {
-                $maxAge = filter_var($_GET['max_age'], FILTER_VALIDATE_INT);
+                $maxAge = \filter_var($_GET['max_age'], FILTER_VALIDATE_INT);
                 if ($maxAge !== false) {
                     $filters['max_age'] = $maxAge;
                 } else {
@@ -111,7 +111,7 @@ final class ProfileController
             }
 
             if (isset($_GET['min_gender_probability'])) {
-                $minGenderProb = filter_var($_GET['min_gender_probability'], FILTER_VALIDATE_FLOAT);
+                $minGenderProb = \filter_var($_GET['min_gender_probability'], FILTER_VALIDATE_FLOAT);
                 if ($minGenderProb !== false) {
                     $filters['min_gender_probability'] = $minGenderProb;
                 } else {
@@ -121,7 +121,7 @@ final class ProfileController
             }
 
             if (isset($_GET['min_country_probability'])) {
-                $minCountryProb = filter_var($_GET['min_country_probability'], FILTER_VALIDATE_FLOAT);
+                $minCountryProb = \filter_var($_GET['min_country_probability'], FILTER_VALIDATE_FLOAT);
                 if ($minCountryProb !== false) {
                     $filters['min_country_probability'] = $minCountryProb;
                 } else {
@@ -152,7 +152,7 @@ final class ProfileController
                 $limit
             );
 
-            $data = array_map(fn($p) => $p->toArray(), $result['profiles']);
+            $data = \array_map(fn($p) => $p->toArray(), $result['profiles']);
 
             Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
         } catch (Exception $e) {
@@ -170,7 +170,7 @@ final class ProfileController
                 return;
             }
 
-            http_response_code(204);
+            \http_response_code(204);
             exit;
         } catch (Exception $e) {
             $this->handleException($e);
@@ -201,11 +201,11 @@ final class ProfileController
             // Search profiles
             $result = $this->profileService->searchProfiles($query, $page, $limit);
 
-            $data = array_map(fn($p) => $p->toArray(), $result['profiles']);
+            $data = \array_map(fn($p) => $p->toArray(), $result['profiles']);
 
             Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
         } catch (Exception $e) {
-            if (str_contains($e->getMessage(), 'Unable to interpret query')) {
+            if (\str_contains($e->getMessage(), 'Unable to interpret query')) {
                 Response::error('Unable to interpret query', 400)->send();
             } else {
                 $this->handleException($e);
@@ -217,7 +217,7 @@ final class ProfileController
     {
         $message = $e->getMessage();
 
-        if (str_contains($message, 'returned an invalid response')) {
+        if (\str_contains($message, 'returned an invalid response')) {
             Response::error($message, 502)->send();
         } else {
             Response::error('Internal server error', 500)->send();

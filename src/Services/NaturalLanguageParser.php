@@ -19,8 +19,8 @@ use InvalidArgumentException;
 final class NaturalLanguageParser
 {
     private const array GENDER_PATTERNS = [
-        '/\bma(?:le)?s?\b/i' => 'male',
-        '/\bfe(?:male)?s?\b/i' => 'female',
+        '/\b(ma(?:le)?s?|man|men)\b/i' => 'male',
+        '/\b(fe(?:male)?s?|wom[ea]n)\b/i' => 'female',
     ];
 
     private const array AGE_GROUP_PATTERNS = [

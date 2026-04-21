@@ -154,7 +154,7 @@ final class ProfileController
 
             $data = \array_map(fn($p) => $p->toArray(), $result['profiles']);
 
-            Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
+            Response::success($data, 200, null, $result['page'], $result['limit'], $result['total'])->send();
         } catch (Exception $e) {
             $this->handleException($e);
         }
@@ -203,7 +203,7 @@ final class ProfileController
 
             $data = \array_map(fn($p) => $p->toArray(), $result['profiles']);
 
-            Response::success($data, 200, null, $result['total'], $result['page'], $result['limit'])->send();
+            Response::success($data, 200, null, $result['page'], $result['limit'], $result['total'])->send();
         } catch (Exception $e) {
             if (\str_contains($e->getMessage(), 'Unable to interpret query')) {
                 Response::error('Unable to interpret query', 400)->send();

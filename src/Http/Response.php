@@ -12,7 +12,6 @@ final class Response implements JsonSerializable
     private string $status;
     private array $data;
     private ?string $message;
-    private ?int $count;
     private ?int $page;
     private ?int $limit;
     private ?int $total;
@@ -22,7 +21,6 @@ final class Response implements JsonSerializable
         string $status,
         array $data = [],
         ?string $message = null,
-        ?int $count = null,
         ?int $page = null,
         ?int $limit = null,
         ?int $total = null
@@ -31,7 +29,6 @@ final class Response implements JsonSerializable
         $this->status = $status;
         $this->data = $data;
         $this->message = $message;
-        $this->count = $count;
         $this->page = $page;
         $this->limit = $limit;
         $this->total = $total;
@@ -41,12 +38,11 @@ final class Response implements JsonSerializable
         array $data,
         int $statusCode = 200,
         ?string $message = null,
-        ?int $count = null,
         ?int $page = null,
         ?int $limit = null,
         ?int $total = null
     ): self {
-        return new self($statusCode, 'success', $data, $message, $count, $page, $limit, $total);
+        return new self($statusCode, 'success', $data, $message, $page, $limit, $total);
     }
 
     public static function error(
@@ -69,10 +65,6 @@ final class Response implements JsonSerializable
 
         if ($this->message !== null) {
             $response['message'] = $this->message;
-        }
-
-        if ($this->count !== null) {
-            $response['count'] = $this->count;
         }
 
         if ($this->page !== null) {

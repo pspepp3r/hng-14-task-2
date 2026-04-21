@@ -101,11 +101,19 @@ final class ProfileRepository implements ProfileRepositoryInterface
         $query = $this->applyFilters($query, $filters, $params);
         $query = $this->applySorting($query, $sortBy, $order);
         $query .= ' LIMIT ? OFFSET ?';
-        $params[] = $limit;
-        $params[] = $offset;
 
         $stmt = $this->db->prepare($query);
-        $stmt->execute($params);
+
+        // Bind filter parameters
+        foreach ($params as $i => $value) {
+            $stmt->bindValue($i + 1, $value);
+        }
+
+        // Bind pagination parameters as integers
+        $stmt->bindValue(\count($params) + 1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(\count($params) + 2, $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
 
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return \array_map([$this, 'mapToProfile'], $results);

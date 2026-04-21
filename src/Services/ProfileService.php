@@ -146,11 +146,6 @@ final class ProfileService
         return $this->getProfilesWithPagination($filters, 'created_at', 'desc', $page, $limit);
     }
 
-    public function getProfileCount(array $filters = []): int
-    {
-        return $this->repository->count($filters);
-    }
-
     public function deleteProfile(string $id): bool
     {
         return $this->repository->delete($id);

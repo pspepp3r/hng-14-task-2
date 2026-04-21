@@ -21,7 +21,7 @@ cd hng-14-task-2
 composer install
 composer migrate
 composer migrate seed data/profiles.json
-composer start
+composer start --timeout=0
 ```
 
 ### API Base URL

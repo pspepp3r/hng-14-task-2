@@ -205,8 +205,12 @@ final class ProfileController
 
             Response::success($data, 200, null, $result['page'], $result['limit'], $result['total'])->send();
         } catch (Exception $e) {
-            if (\str_contains($e->getMessage(), 'Unable to interpret query')) {
+            $message = $e->getMessage();
+            if (\str_contains($message, 'Unable to interpret query')) {
                 Response::error('Unable to interpret query', 400)->send();
+            } elseif (\str_contains($message, 'not found')) {
+                // Handle country not found and other lookup errors
+                Response::error($message, 400)->send();
             } else {
                 $this->handleException($e);
             }

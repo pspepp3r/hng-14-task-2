@@ -133,13 +133,28 @@ final class NaturalLanguageParser
     private function parseCountry(string $query, array &$filters): void
     {
         // Extract country name from "from [country]" pattern
-        preg_match('/\bfrom\s+([a-z\s]+?)(?:\s+(?:age|male|female|teenager|adult|senior|child|young|old)|$)/i', $query, $matches);
+        // Updated pattern to better handle multi-word country names
+        preg_match('/\bfrom\s+([^,;|]+?)(?:\s+(?:age|male|female|teenager|adult|senior|child|young|old)|$)/i', $query, $matches);
 
         if (empty($matches[1])) {
             return;
         }
 
         $countryName = trim($matches[1]);
+
+        // Remove any trailing keywords that might have been captured
+        $keywords = ['age', 'male', 'female', 'teenager', 'adult', 'senior', 'child', 'young', 'old'];
+        $countryLower = strtolower($countryName);
+
+        foreach ($keywords as $keyword) {
+            if (preg_match('/\s+' . preg_quote($keyword) . '\s*$/', $countryLower)) {
+                $countryName = trim(preg_replace('/\s+' . preg_quote($keyword) . '\s*$/i', '', $countryName));
+            }
+        }
+
+        if (empty($countryName)) {
+            return;
+        }
 
         // Try API first (via CountriesClient)
         $countryCode = $this->countriesClient->findCountryCode($countryName);
@@ -153,7 +168,11 @@ final class NaturalLanguageParser
         $countryId = $this->repository->findByCountryName($countryName);
         if ($countryId) {
             $filters['country_id'] = $countryId;
+            return;
         }
+
+        // If country name is provided but not found, throw exception to indicate a parsing issue
+        throw new InvalidArgumentException("Country '{$countryName}' not found. Please provide a valid country name.");
     }
 
     /**

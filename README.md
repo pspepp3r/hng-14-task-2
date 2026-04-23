@@ -20,7 +20,7 @@ git clone https://github.com/pspepp3r/hng-14-task-2.git
 cd hng-14-task-2
 composer install
 composer migrate
-composer migrate seed data/profiles.json
+composer migrate seed data/seed_profiles.json
 composer start --timeout=0
 ```
 

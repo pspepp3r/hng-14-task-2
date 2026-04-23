@@ -40,18 +40,9 @@ class Seeder
             throw new RuntimeException("Could not read seed file: $filePath");
         }
 
-        $data = json_decode($jsonContent, true);
+        $data = json_decode($jsonContent, true)['profiles'];
         if ($data === null) {
             throw new RuntimeException("Invalid JSON in seed file: $filePath");
-        }
-
-        if (!isset($data[0]) && !\is_array($data)) {
-            throw new RuntimeException("Seed file must contain an array of profiles");
-        }
-
-        // Ensure it's an array of arrays (in case it's wrapped)
-        if (!isset($data[0])) {
-            $data = [$data];
         }
 
         $profiles = [];
